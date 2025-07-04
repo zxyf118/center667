@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mapper.UserNewShareSubscriptionMapper">
+
+	<select id="managerList" resultType="vo.manager.NewShareSubscriptionListVO">
+		SELECT 
+		    sub.id,
+		    order_sn,
+		    sub.user_id,
+		    u.agent_id,
+		    a.agent_name,
+		    new_share_id,
+		    sub.stock_code,
+		    sub.stock_name,
+		    sub.stock_type,
+		    sub.stock_plate,
+		    buying_price,
+		    subscription_amount,
+		    bond,
+		    purchase_quantity,
+		    award_quantity,
+		    lever,
+		    subscription_time,
+		    award_time,
+		    payment_time,
+		    transfer_time,
+		    subscription_status,
+		    u.available_amt,
+		    uf.financing_amount,
+   			uf.annualized_interest_rate
+		FROM
+		    user_new_share_subscription sub
+		        INNER JOIN
+		    user_info u ON sub.user_id = u.id
+		        LEFT JOIN
+		    agent_info a ON u.agent_id = a.id
+		    	inner join new_share ns on sub.new_share_id=ns.id
+		    	LEFT JOIN
+   			user_financing_interest_info uf ON uf.source = 1 AND uf.source_id = sub.id
+	<trim prefix="where" suffixOverrides="and">
+		<if test="param.orderSn != null and param.orderSn != ''">
+			order_sn=#{param.orderSn} and
+		</if>
+		<if test="param.subscriptionType != null">
+			subscription_type = #{param.subscriptionType} and
+		</if>
+		<if test="param.userId != null and param.userId > 0">
+			u.id=#{param.userId} and
+		</if>
+		<if test="param.agentId != null and param.agentId > 0">
+			a.id=#{param.agentId} and
+		</if>
+		<if test="param.newShareId != null and param.newShareId > 0">
+			new_share_id=#{param.newShareId} and
+		</if>
+		<if test="param.stockCodeOrName != null and param.stockCodeOrName != ''">
+			(ns.stock_code like '%${param.stockCodeOrName}%' or ns.stock_name like '%${param.stockCodeOrName}%') and
+		</if>
+		<if test="param.subscriptionStatus != null">
+			subscription_status=#{param.subscriptionStatus} and
+		</if>
+		<if test="param.subscriptionType != null">
+			subscription_type=#{param.subscriptionType} and
+		</if>
+		<if test="param.startTime != null">
+			subscription_time>=#{param.startTime} and
+		</if>
+		<if test="param.endTime != null">
+			subscription_time &lt;= #{param.endTime}
+		</if>
+	</trim>
+		order by subscription_status,subscription_time desc
+	</select>
+	
+	<select id="getUserNewShareSubscriptionExpired" resultType="entity.UserNewShareSubscription">
+		SELECT 
+		    sub.id,
+		    sub.order_sn,
+		    sub.user_id,
+		    sub.new_share_id,
+		    sub.stock_code,
+		    sub.stock_name,
+		    sub.stock_type,
+		    sub.stock_plate,
+		    sub.subscription_amount,
+		    sub.bond,
+		    sub.buying_price,
+		    sub.purchase_quantity,
+		    sub.award_quantity,
+		    sub.subscription_status,
+		    sub.subscription_time,
+		    sub.subscription_type,
+		    sub.lever,
+		    sub.award_time,
+		    sub.payment_time,
+		    sub.transfer_time,
+		    sub.exchange_rate
+		FROM
+		    user_new_share_subscription sub
+		    inner join new_share ns on sub.new_share_id=ns.id
+		<trim prefix="where" suffixOverrides="and">
+			(sub.subscription_status = 0 OR sub.subscription_status = 1) AND 
+  			ns.payment_deadline &lt; NOW()
+		</trim>	
+		order by subscription_status,subscription_time desc
+	</select>
+
+</mapper>

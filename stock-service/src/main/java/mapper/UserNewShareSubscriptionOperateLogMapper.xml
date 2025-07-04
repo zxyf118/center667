@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mapper.UserNewShareSubscriptionOperateLogMapper">
+	<select id="managerList" resultType="vo.manager.NewShareSubscriptionOperateLogVO">
+		SELECT 
+		    subscription_id,
+		    order_sn,
+		    user_id,
+		    u.agent_id,
+		    a.agent_name,
+		    new_share_id,
+		    stock_code,
+		    stock_name,
+		    stock_type,
+		    stock_plate,
+		    purchase_quantity,
+		    award_quantity,
+		    subscription_type,
+		    operate_type,
+		    operator,
+		    operate_time,
+		    ip,
+		    ip_address
+		FROM
+		    user_new_share_subscription_operate_log log
+		        INNER JOIN
+		    user_new_share_subscription sub ON log.subscription_id = sub.id
+		        INNER JOIN
+		    user_info u ON sub.user_id = u.id
+		        LEFT JOIN
+		    agent_info a ON u.agent_id = a.id
+	<trim prefix="where" suffixOverrides="and">
+		<if test="param.subscriptionId != null and param.subscriptionId > 0">
+			subscription_id=#{param.subscriptionId} and
+		</if>
+		<if test="param.orderSn != null and param.orderSn != ''">
+			order_sn=#{param.orderSn} and
+		</if>
+		<if test="param.userId != null and param.userId > 0">
+			u.id=#{param.userId} and
+		</if>
+		<if test="param.agentId != null and param.agentId > 0">
+			a.id=#{param.agentId} and
+		</if>
+		<if test="param.newShareId != null and param.newShareId > 0">
+			new_share_id=#{param.newShareId} and
+		</if>
+		<if test="param.stockCodeOrName != null and param.stockCodeOrName != ''">
+			(stock_code like '%${param.stockCodeOrName}%' or stock_name like '%${param.stockCodeOrName}%') and
+		</if>
+		<if test="param.operateType != null">
+			operate_type=#{param.operateType} and
+		</if>
+		<if test="param.subscriptionType != null">
+			subscription_type=#{param.subscriptionType} and
+		</if>
+		<if test="param.startTime != null">
+			subscription_time>=#{param.startTime} and
+		</if>
+		<if test="param.endTime != null">
+			subscription_time &lt;= #{param.endTime}
+		</if>
+	</trim>
+		order by operate_time desc
+	</select>
+</mapper>

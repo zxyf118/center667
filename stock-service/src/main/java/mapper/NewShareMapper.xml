@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mapper.NewShareMapper">
+	<select id="getNewShareServerNewShareVO" resultType="vo.server.ServerNewShareVO">
+		select 
+			id 'newShareId', 
+			stock_name,
+			stock_code,
+			stock_type,
+			stock_plate,
+			price,
+			discounted_price,
+			max_buying_shares,
+			issue_shares,
+			subscription_deadline,
+			payment_deadline,
+			listing_date,
+			enable_zero_subscription,
+			enable_cash_subscription,
+			enable_financing_subscription 
+		from 
+			new_share 
+		<trim prefix="where" suffixOverrides="and">
+			subscription_deadline >= NOW() and
+			payment_deadline >= NOW() and
+			listing_date >= NOW() and
+			is_show = 1 and
+			is_lock = 0 and
+			price IS NOT NULL and
+			price > 0 and
+			discounted_price IS NOT NULL and
+			discounted_price > 0 and
+			<if test="param.stockTypeIn != null and param.stockTypeIn != ''">
+				stock_type in (${param.stockTypeIn}) and
+			</if>
+			<if test="param.startTime != null">
+				add_time >= #{param.startTime} and
+			</if>
+			<if test="param.endTime != null">
+				add_time &lt;= #{param.endTime}
+			</if>
+		</trim>
+		order by id desc
+	</select>
+</mapper>

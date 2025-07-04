@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mapper.AgentInfoMapper">
+
+	<select id="managerAgentList" resultType="vo.manager.AgentListVO">
+		SELECT 
+		    id,
+		    agent_name,
+		    general_parent_id,
+		    parent_id,
+		    service_url,
+		    create_time,
+		    creator,
+		    ifnull((SELECT agent_name FROM agent_info i WHERE i.id = a.general_parent_id),'-') as general_parent_name,
+			ifnull((SELECT agent_name FROM agent_info i WHERE i.id = a.parent_id),'-') as parent_name,
+		    (Select count(1) from agent_parent_info where agent_id=a.id) as childAgentCount,
+		    (Select count(1) from agent_member_info where agent_id=a.id) as memberCount
+		FROM
+		    agent_info a
+		<trim prefix="where" suffixOverrides="and">
+			<if test="param.agentId != null and param.agentId > 0">
+				a.id=#{param.agentId} and
+			</if>
+			<if test="param.agentName != null and param.agentName != ''">
+				a.agent_name like '%${param.agentName}%' and
+			</if>
+			<if test="param.parentId != null and param.parentId > 0">
+				a.parent_id=#{param.parentId} and
+			</if>
+			<if test="param.generalParentId != null and param.generalParentId > 0">
+				a.general_parent_id=#{param.generalParentId} and
+			</if>
+			<if test="param.createTimeStart != null">
+				a.create_time >= #{param.createTimeStart} and
+			</if>
+			<if test="param.createTimeEnd != null">
+				a.create_time &lt;= #{param.createTimeEnd} and
+			</if>
+		</trim>
+		order by a.create_time desc
+	</select>
+	
+	
+	<sql id="foreach">
+        <foreach collection="ids" item="id" index="i" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </sql>
+</mapper>

@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mapper.UserInfoMapper">
+
+	<select id="pNextParentUsers" statementType="CALLABLE" resultType="vo.common.ChildAndParentVO">
+        {
+            call p_next_supper_users(#{userId,mode=IN,jdbcType=INTEGER})
+        }
+    </select>
+ 
+    <select id="pNextParentAgents" statementType="CALLABLE" resultType="vo.common.ChildAndParentVO">
+        {
+            call p_next_supper_agents(#{agentId,mode=IN,jdbcType=INTEGER})
+        }
+    </select>
+
+	<select id="managerUserList" resultType="entity.UserInfo">
+		SELECT 
+		    u.id,
+		    account_type,
+		    agent_id,
+		    nickname,
+		    (select agent_name from agent_info where id=u.agent_id) as agentName,
+		    reg_invitation_code,
+		    available_amt,
+		    trading_frozen_amt,
+		    ipo_amt,
+			detention_amt,
+			
+			(SELECT 
+	            IFNULL(SUM(amount_received), 0)
+	        FROM
+	            user_stock_closing_position
+	        WHERE
+	            stock_type IN ('sh' , 'sz', 'bj', 'us')
+	            	and user_id=u.id
+	                AND transaction_status = 1
+	                AND transaction_time > DATE_SUB(SYSDATE(), INTERVAL 1 DAY)) + (SELECT 
+	            IFNULL(SUM(amount_received), 0)
+	        FROM
+	            user_stock_closing_position
+	        WHERE
+	            stock_type = 'hk'
+	            	and user_id=u.id
+	                AND transaction_status = 1
+	                AND transaction_time > DATE_SUB(SYSDATE(), INTERVAL 2 DAY)) as unavailableWithdrawalAmt,
+			real_auth_status,
+			funding_status,
+		    login_enable,
+		    trade_enable,
+		    reg_time,
+		    last_login_time
+		FROM
+		    f_stock.user_info u 
+		<trim prefix="where" suffixOverrides="and">
+			<if test="param.id != null and param.id > 0">
+				u.id=#{param.id} and
+			</if>
+			<if test="param.accountType != null">
+				u.account_type=#{param.accountType} and
+			</if>
+			<if test="param.agentId != null and param.agentId > 0">
+				<choose>
+					<when test="param.searchChildOfAgent == true">
+						u.id in <include refid="foreach"></include> and
+					</when>
+					<otherwise>
+						u.agent_id=#{param.agentId} and
+					</otherwise>
+				</choose>
+			</if>
+			<if test="param.realName != null and param.realName != ''">
+				u.real_name like '%${param.realName}%' and
+			</if>
+			<if test="param.invitationCode != null and param.invitationCode != ''">
+				u.reg_invitation_code like '%${param.invitationCode}%' and
+			</if>
+			<if test="param.phone != null and param.phone != ''">
+				concat(u.area_code,u.phone) like '%${param.phone}%' and
+			</if>
+			<if test="param.email != null and param.email != ''">
+				u.email like '%${param.email}%' and
+			</if>
+			<if test="param.loginEnable != null">
+				u.login_enable=#{param.loginEnable} and
+			</if>
+			<if test="param.tradeEnable != null">
+				u.trade_enable=#{param.tradeEnable} and
+			</if>
+			<if test="param.realAuthStatus != null">
+				u.real_auth_status=#{param.realAuthStatus} and
+			</if>
+			<if test="param.fundingStatus != null">
+				u.funding_status=#{param.fundingStatus} and
+			</if>
+			<if test="param.regTimeStart != null">
+				u.reg_time >= #{param.regTimeStart} and
+			</if>
+			<if test="param.regTimeEnd != null">
+				u.reg_time &lt;= #{param.regTimeEnd} and
+			</if>
+			<if test="param.lastLoginTimeStart != null">
+				u.last_login_time >= #{param.lastLoginTimeStart} and
+			</if>
+			<if test="param.lastLoginTimeEnd != null">
+				u.last_login_time &lt;= #{param.lastLoginTimeEnd} and
+			</if>
+		</trim>
+		order by 
+		<choose>
+			<when test="param.orderBy == 1">
+				u.reg_time
+			</when>
+			<when test="param.orderBy == 2">
+				u.available_amt
+			</when>
+			<otherwise>
+				u.last_login_time
+			</otherwise>
+		</choose>
+		<if test="param.descOrAsc == null or param.descOrAsc == 0">
+			desc
+		</if>
+	</select>
+	
+	<sql id="foreach">
+        <foreach collection="ids" item="id" index="i" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </sql>
+</mapper>
