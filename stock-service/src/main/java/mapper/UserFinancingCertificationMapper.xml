@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mapper.UserFinancingCertificationMapper">
+	<select id="managerUserFinancingCertificationList" resultType="entity.UserFinancingCertification">
+		SELECT 
+		    f.*,
+		     u.available_amt,
+		    u.trading_frozen_amt,
+		    u.ipo_amt
+		FROM
+		    user_financing_certification f
+		        INNER JOIN
+		    user_info u ON u.id = f.user_id 
+		    
+	    <trim prefix="where" suffixOverrides="and">
+	    	<if test="param.userId != null and param.userId > 0">
+	    		u.id=#{param.userId} and
+	    	</if>
+	    	<if test="param.requestTimeStart != null">
+	    		f.request_time >= #{param.requestTimeStart} and
+	    	</if>
+	    	<if test="param.requestTimeEnd != null">
+	    		f.request_time &lt;= #{param.requestTimeEnd} and
+	    	</if>
+	    	<if test="param.operateTimeStart != null">
+	    		f.operate_time >= #{param.operateTimeStart} and
+	    	</if>
+	    	<if test="param.operateTimeEnd != null">
+	    		f.operate_time &lt;= #{param.operateTimeEnd} and
+	    	</if>
+	    	<if test="param.fundingStatus != null and param.fundingStatus > 0">
+	    		f.funding_status = #{param.fundingStatus}
+	    	</if>
+	    </trim>
+		order by f.id desc
+	</select>
+</mapper>

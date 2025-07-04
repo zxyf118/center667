@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mapper.StockInfoMapper">
+	<select id="managerStockList" resultType="entity.StockInfo">
+		SELECT 
+		    s.*,
+		    (SELECT 
+		            SUM(percentage_increase)
+		        FROM
+		            (SELECT 
+		                q.percentage_increase
+		            FROM
+		                daily_stock_quotes q
+		            WHERE
+		                q.stock_id = s.id
+		            ORDER BY id DESC
+		            LIMIT 0 , 3) t) AS percentageIncreaseIn3Days
+		FROM
+		    stock_info s
+		<trim prefix="where" suffixOverrides="and">
+			<if test="param.stockId != null and param.stockId > 0">
+				s.id = #{param.stockId} and 
+			</if>
+			<if test="param.stockCodeOrName != null and param.stockCodeOrName != ''">
+				(s.stock_code like '${param.stockCodeOrName}' or s.stock_name like '${param.stockCodeOrName}') and 
+			</if>
+			<if test="param.stockType != null and param.stockType != ''">
+				s.stock_type = #{param.stockType} and 
+			</if>
+			<if test="param.stockPlate != null and param.stockPlate != ''">
+				s.stock_plate = #{param.stockPlate} and 
+			</if>
+			<if test="param.isShow != null">
+				s.is_show = #{param.isShow} and 
+			</if>
+			<if test="param.isLock != null">
+				s.is_lock = #{param.isLock} and 
+			</if>
+			<if test="param.isBlockTrading != null">
+				s.is_block_trading = #{param.isBlockTrading} and 
+			</if>
+			<if test="param.addTimeStart != null">
+				s.add_time >= #{param.addTimeStart} and 
+			</if>
+			<if test="param.addTimeEnd != null">
+				s.add_time &lt;= #{param.addTimeEnd} and 
+			</if>
+		</trim>
+		order by add_time desc
+	</select>
+</mapper>

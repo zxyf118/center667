@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mapper.AgentInvitationCodeMapper">
+
+	<select id="managerInvitationCodeList" resultType="entity.AgentInvitationCode">
+		select t.*, (select agent_name from agent_info a where a.id=t.agent_id) as agentName from agent_invitation_code t
+		<trim prefix="where" suffixOverrides="and">
+			<if test="param.agentId != null and param.agentId > 0">
+				t.agent_id=#{param.agentId} and
+			</if>
+			<if test="param.invitationCode != null and param.invitationCode != ''">
+				t.invitation_code=#{param.invitationCode} and
+			</if>
+			<if test="param.createTimeStart != null">
+				t.create_time>=#{param.createTimeStart} and
+			</if>
+			<if test="param.createTimeEnd != null">
+				t.create_time &lt;= #{param.createTimeEnd}
+			</if>
+		</trim>
+		order by id desc
+	</select>
+</mapper>
